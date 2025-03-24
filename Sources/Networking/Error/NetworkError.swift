@@ -19,4 +19,5 @@ enum NetworkError: Error {
     case parserError(error: Error, data: Data?)
     case imageProcessingError
     case graphQLError(error: Error)
+    case urlError(URLError) 
 }

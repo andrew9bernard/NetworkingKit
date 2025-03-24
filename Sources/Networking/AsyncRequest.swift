@@ -2,12 +2,50 @@ import Foundation
 
 
 // MARK: - NetworkingProtocol
-protocol NetworkingProtocol {
-    func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T
-    func requestGraphQL<T: Decodable>(_ endpoint: Endpoint, query: String, variables: [String: Any]?) async throws -> T
+public protocol AsyncRequestProtocol {
+    func perform<T: Decodable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T
+    //func perform(endpoint: Endpoint) async throws
+    //func requestGraphQL<T: Decodable>(_ endpoint: Endpoint, query: String, variables: [String: Any]?) async throws -> T
 }
 
-class Networking: NetworkingProtocol {
+public struct AsyncRequest: AsyncRequestProtocol {
+    
+    private let urlSession: URLSession
+    private let parser: Parser
+    
+    public init(urlSession: URLSession = .shared, parser: Parser = Parser()) {
+        self.urlSession = urlSession
+        self.parser = parser
+    }
+    
+    // MARK: perform request with Async Await and return Decodable using Request Protocol
+    public func perform<T: Decodable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
+        return try await performRequest(endpoint: endpoint, decodeTo: decodableObject)
+    }
+    
+//    // MARK: perform request with Async Await using Request protocol
+//    public func perform(request: Request) async throws {
+//        try await performRequest(request: request, decodeTo: EmptyResponse.self)
+//    }
+    
+    private func performRequest<T: Decodable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
+        do {
+            guard let request = endpoint.request() else {
+                throw NetworkError.invalidRequest
+            }
+            
+            let (data, response) = try await urlSession.data(for: request)
+            
+            //need to validate the response
+            //need to validate the data
+            
+            let result = try parser.json(data: data)
+        }
+    }
+    
+}
+
+public struct Networking: NetworkingProtocol {
     private let urlSession: URLSession
     private let parser: Parser
     
@@ -16,7 +54,7 @@ class Networking: NetworkingProtocol {
         self.parser = parser
     }
     
-    func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
+    private func request<T: Decodable>(_ endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
         guard let request = endpoint.request() else {
             throw NetworkError.invalidRequest
         }
@@ -75,6 +113,6 @@ class Networking: NetworkingProtocol {
 
 
 // MARK: - Endpoint
-protocol Endpoint {
+public protocol Endpoint {
     func request() -> URLRequest?
 }
