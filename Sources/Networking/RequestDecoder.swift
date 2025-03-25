@@ -6,7 +6,7 @@
 //
 import Foundation
 
-public protocol RequestDecodableProtocol {
+public protocol RequestDecodableProtocol: Sendable {
     func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T
 }
 

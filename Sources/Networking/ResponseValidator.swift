@@ -24,7 +24,7 @@ public struct URLResponseHeaders: Sendable, Equatable {
     }
 }
 
-public protocol ResponseValidatorProtocol {
+public protocol ResponseValidatorProtocol: Sendable {
     func validateNoError(_ error: Error?) throws
     func validateStatus(from urlResponse: URLResponse?) throws
     func validateData(_ data: Data?) throws -> Data
