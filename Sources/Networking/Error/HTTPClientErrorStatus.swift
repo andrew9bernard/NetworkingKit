@@ -1,3 +1,11 @@
+//
+//  HTTPClientErrorStatus.swift
+//  Networking
+//
+//  Created by Andrew Bernard on 3/24/25.
+//
+
+
 import Foundation
 
 public enum HTTPClientErrorStatus: Int, Error {

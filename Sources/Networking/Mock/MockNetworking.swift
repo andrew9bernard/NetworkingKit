@@ -7,26 +7,39 @@
 import Foundation
 
 // MARK: - MockWebService
-class MockNetworking: NetworkingProtocol {
-    private let parser: Parser
+class MockNetworking: AsyncRequestProtocol {
+    func perform(endpoint: any Endpoint) async throws {
+            guard let endpoint = endpoint as? MockEndpoint else {
+                throw NetworkError.endpointNotMocked
+            }
+            
+            guard let data = endpoint.mockData() else {
+                throw NetworkError.mockDataMissing
+            }
+        }
     
-    init(parser: Parser = Parser()) {
-        self.parser = parser
+    func perform<T>(endpoint: any Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
+//        guard let endpoint = endpoint as? MockEndpoint else {
+//                   throw NetworkError.endpointNotMocked
+//               }
+//               
+//               guard let data = endpoint.mockData() else {
+//                   throw NetworkError.mockDataMissing
+//               }
+//               
+//        return try requestDecoder.decode(data, from: endpoint)
+        return T.self as! T
     }
     
-    func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
-        guard let endpoint = endpoint as? MockEndpoint else {
-            throw NetworkError.endpointNotMocked
-        }
-        
-        guard let data = endpoint.mockData() else {
-            throw NetworkError.mockDataMissing
-        }
-        
-        return try parser.json(data: data)
-    }
     
-    func requestGraphQL<T: Decodable>(_ endpoint: Endpoint, query: String, variables: [String: Any]?) async throws -> T {
-        throw NetworkError.endpointNotMocked
+    private let validator: ResponseValidatorProtocol
+    private let requestDecoder: RequestDecodableProtocol
+    
+    public init(
+        validator: ResponseValidatorProtocol = ResponseValidator(),
+                requestDecoder: RequestDecodableProtocol = RequestDecoder()) {
+        
+        self.validator = validator
+        self.requestDecoder = requestDecoder
     }
 }

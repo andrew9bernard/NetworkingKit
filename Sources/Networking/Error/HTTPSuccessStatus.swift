@@ -1,3 +1,9 @@
+//
+//  HTTPSuccessStatus.swift
+//  Networking
+//
+//  Created by Andrew Bernard on 3/24/25.
+//
 import Foundation
 
 public enum HTTPSuccessStatus: Int, Error {

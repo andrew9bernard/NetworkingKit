@@ -6,6 +6,11 @@
 //
 import Foundation
 
+public struct QueryPayload: Codable {
+    var query: String
+    var variables: [String: AnyCodable]?
+}
+
 public typealias EndpointRequest = URLRequestBuilder
 
 public struct URLRequestBuilder: Sendable {
@@ -65,6 +70,24 @@ public struct URLRequestBuilder: Sendable {
             return updated
         }
     }
+    
+
+    
+    /// Adds a GraphQL request body using `QueryPayload`
+        public func graphQLRequestBody(_ queryPayload: QueryPayload, encoder: JSONEncoder = URLRequestBuilder.jsonEncoder) throws -> URLRequestBuilder {
+            let jsonBody = try encoder.encode(queryPayload)
+            return self
+                .method(.post) // GraphQL typically uses POST
+                .contentType(.applicationJSON) // Ensure JSON content-type
+                .body(jsonBody, setContentLength: true)
+        }
+
+        /// Convenience method to create a GraphQL request from a query string and variables
+        public func graphQLQuery(_ query: String, variables: [String: Any]? = nil, encoder: JSONEncoder = URLRequestBuilder.jsonEncoder) throws -> URLRequestBuilder {
+            let encodedVariables = variables?.mapValues { AnyCodable($0) }
+            let payload = QueryPayload(query: query, variables: encodedVariables)
+            return try graphQLRequestBody(payload, encoder: encoder)
+        }
 
     public static let jsonEncoder = JSONEncoder()
 
@@ -125,12 +148,12 @@ public struct URLRequestBuilder: Sendable {
 // MARK: - Finalizing
 
 extension URLRequestBuilder {
-    public func makeRequest(withBaseURL baseURL: URL) -> URLRequest {
-        makeRequest(withConfig: .baseURL(baseURL))
-    }
-
     public func makeRequest(withConfig config: RequestConfiguration) -> URLRequest {
         config.configureRequest(self)
+    }
+    
+    public func makeRequest(withBaseURL baseURL: URL) -> URLRequest {
+        makeRequest(withConfig: .baseURL(baseURL))
     }
 }
 
