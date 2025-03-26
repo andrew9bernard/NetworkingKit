@@ -34,7 +34,7 @@ public struct AsyncRequest: AsyncRequestProtocol {
     @discardableResult
     private func performRequest<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
         do {
-            guard let request = request.request() else {
+            guard let request = request.urlRequest else {
                 throw NetworkError.internalError(.noRequest)
             }
             
@@ -56,7 +56,7 @@ public struct AsyncRequest: AsyncRequestProtocol {
     
 }
 
-// MARK: - RequestModel
-public protocol RequestModel {
-    func request() -> URLRequest?
-}
+//// MARK: - RequestModel
+//public protocol RequestModel {
+//    func request() -> URLRequest?
+//}

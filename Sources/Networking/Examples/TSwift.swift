@@ -6,61 +6,21 @@
 //
 import Foundation
 
-struct TSwift: RequestModel {
-    func request() -> URLRequest? {
-        guard let baseURL = URL(string: "https://taylor-swift-api.sarbo.workers.dev") else { return nil }
-        let urlRequest =  RequestBuilder(path: "albums")
-            .method(.get)
-           // .jsonBody(user)
-            .contentType(.applicationJSON)
-            .accept(.applicationJSON)
-            .timeout(60)
-            .queryItem(name: "song", value: "bad blood")
-          //  .header(name: "Auth-Token", value: authToken)
-            .makeRequest(withBaseURL: baseURL)
-    
-        return urlRequest
-    }
-    
-    
-    let query = """
-        query GetUser($id: ID!) {
-            user(id: $id) {
-                id
-                name
-                email
-            }
-        }
-    """
-
-    let variables: [String: Any] = ["id": "12345"]
-    
-    func graphQLRequest() throws -> URLRequest? {
-        guard let baseURL = URL(string: "https://swapi-graphql.netlify.app/.netlify/functions") else { return nil }
+struct TSwift {
+    func  getRequest(auth: String) -> RequestModel {
         
-        let queryPayload = QueryPayload(
-            query: """
-                query GetFilms {
-                    allFilms {
-                        films {
-                            title
-                            director
-                        }
-                    }
-                }
-            """,
-            variables: [:]
-        )
-        do {
-            let urlRequest =  try RequestBuilder(path: "index")
-                .graphQLRequestBody(queryPayload)
-                .makeRequest(withBaseURL: baseURL)
+            let urlRequest = RequestBuilder()
+                .setHttpMethod(.get)
+                .setBaseUrl("https://taylor-swift-api.sarbo.workers.dev/albums")
+                .setTimeoutInterval(60)
+                .setHeaders([
+                    .contentType(.json),
+                    .authorization(.bearer(auth))
+                ])
+                .build()
             return urlRequest
-        } catch {
-            throw NetworkError.graphQLError(error: error)
         }
     
-    }
 }
 
 struct Album: Decodable {
@@ -143,7 +103,8 @@ class ExampleViewModel: ObservableObject {
         defer { Task { @MainActor in self.isLoading = false } }
 
         do {
-            let result: ExampleResponse = try await networking.perform(request: ExampleEndpoint(), decodeTo: ExampleResponse.self)
+            let request = TSwift().getRequest(auth: "AuthorizationKey12334445")
+            let result: ExampleResponse = try await networking.perform(request: request, decodeTo: ExampleResponse.self)
             Task { @MainActor in self.data = result.title }
         } catch {
             Task { @MainActor in self.errorMessage = error.localizedDescription }
@@ -153,6 +114,16 @@ class ExampleViewModel: ObservableObject {
 
 // MARK: - Example Endpoint
 struct ExampleEndpoint: RequestModel {
+    var httpMethod: HTTPMethod
+    
+    var baseUrlString: String
+    
+    var parameters: [HTTPParameter]?
+    
+    var headers: [HTTPHeader]?
+    
+    var body: HTTPBody?
+    
     func request() -> URLRequest? {
         guard let url = URL(string: "https://jsonplaceholder.typicode.com/todos/1") else { return nil }
         return URLRequest(url: url)
