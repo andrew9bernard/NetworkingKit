@@ -6,8 +6,8 @@
 //
 import Foundation
 
-struct TSwift {
-    func  getRequest(auth: String) -> RequestModel {
+struct TSwift: RequestModel {
+    func  getRequest(auth: String) -> Request {
         
             let urlRequest = RequestBuilder()
                 .setHttpMethod(.get)
@@ -23,7 +23,7 @@ struct TSwift {
     
 }
 
-struct Album: Decodable {
+struct Album: Codable {
     let albumId: Int
     let title: String
     let releaseDate: String
@@ -104,36 +104,10 @@ class ExampleViewModel: ObservableObject {
 
         do {
             let request = TSwift().getRequest(auth: "AuthorizationKey12334445")
-            let result: ExampleResponse = try await networking.perform(request: request, decodeTo: ExampleResponse.self)
-            Task { @MainActor in self.data = result.title }
+            let result = try await networking.perform(request: request, decodeTo: [Album].self)
+           
         } catch {
             Task { @MainActor in self.errorMessage = error.localizedDescription }
         }
     }
-}
-
-// MARK: - Example Endpoint
-struct ExampleEndpoint: RequestModel {
-    var httpMethod: HTTPMethod
-    
-    var baseUrlString: String
-    
-    var parameters: [HTTPParameter]?
-    
-    var headers: [HTTPHeader]?
-    
-    var body: HTTPBody?
-    
-    func request() -> URLRequest? {
-        guard let url = URL(string: "https://jsonplaceholder.typicode.com/todos/1") else { return nil }
-        return URLRequest(url: url)
-    }
-}
-
-// MARK: - Example Response Model
-struct ExampleResponse: Codable {
-    let userId: Int
-    let id: Int
-    let title: String
-    let completed: Bool
 }

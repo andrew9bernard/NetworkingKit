@@ -19,7 +19,7 @@ public protocol RequestBuilderProtocol {
     func setBody(_ body: HTTPBody) -> RequestBuilderProtocol
     func setTimeoutInterval(_ timeoutInterval: TimeInterval) -> RequestBuilderProtocol
     func setCachePolicy(_ cachePolicy: URLRequest.CachePolicy) -> RequestBuilderProtocol
-    func build() -> RequestModel
+    func build() -> Request
 }
 
 public class RequestBuilder: RequestBuilderProtocol {
@@ -76,7 +76,7 @@ public class RequestBuilder: RequestBuilderProtocol {
         return self
     }
 
-    public func build() -> RequestModel {
+    public func build() -> Request {
         return BaseRequest(httpMethod: httpMethod, baseUrlString: baseUrlString, parameters: parameters, headers: headers, body: body, timeoutInterval: timeoutInterval, cachePolicy: cachePolicy)
     }
 }

@@ -8,7 +8,7 @@ import Foundation
 
 // MARK: - MockWebService
 class MockNetworking: AsyncRequestProtocol, @unchecked Sendable {
-    func perform(request: any RequestModel) async throws {
+    func perform(request: any Request) async throws {
             guard let request = request as? MockRequest else {
                 throw NetworkError.endpointNotMocked
             }
@@ -18,7 +18,7 @@ class MockNetworking: AsyncRequestProtocol, @unchecked Sendable {
             }
         }
     
-    func perform<T>(request: any RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
+    func perform<T>(request: any Request, decodeTo decodableObject: T.Type) async throws -> T {
 //        guard let endpoint = endpoint as? MockEndpoint else {
 //                   throw NetworkError.endpointNotMocked
 //               }

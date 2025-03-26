@@ -3,8 +3,8 @@ import Foundation
 
 // MARK: - NetworkingProtocol
 public protocol AsyncRequestProtocol: Sendable {
-    func perform<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T
-    func perform(request: RequestModel) async throws
+    func perform<T: Codable>(request: Request, decodeTo decodableObject: T.Type) async throws -> T
+    func perform(request: Request) async throws
 }
 
 public struct AsyncRequest: AsyncRequestProtocol {
@@ -22,17 +22,17 @@ public struct AsyncRequest: AsyncRequestProtocol {
     
     
     // MARK: perform request with Async Await and return Decodable using Request Protocol
-    public func perform<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
+    public func perform<T: Codable>(request: Request, decodeTo decodableObject: T.Type) async throws -> T {
         return try await performRequest(request: request, decodeTo: decodableObject)
     }
     
 //    // MARK: perform request with Async Await using Request protocol
-    public func perform(request: RequestModel) async throws {
+    public func perform(request: Request) async throws {
         try await performRequest(request: request, decodeTo: EmptyResponse.self)
     }
     
     @discardableResult
-    private func performRequest<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
+    private func performRequest<T: Codable>(request: Request, decodeTo decodableObject: T.Type) async throws -> T {
         do {
             guard let request = request.urlRequest else {
                 throw NetworkError.internalError(.noRequest)

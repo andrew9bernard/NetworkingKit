@@ -9,6 +9,10 @@
 import Foundation
 
 public protocol RequestModel {
+    func  getRequest(auth: String) -> Request
+}
+
+public protocol Request {
     var httpMethod: HTTPMethod { get }
     var baseUrlString: String { get }
     var parameters: [HTTPParameter]? { get }
@@ -19,13 +23,13 @@ public protocol RequestModel {
 }
 
 // default values
-public extension RequestModel {
+public extension Request {
     var timeoutInterval: TimeInterval { 60 }
     var cachePolicy: URLRequest.CachePolicy { .useProtocolCachePolicy }
 }
 
 // additions
-public extension RequestModel {
+public extension Request {
     var urlRequest: URLRequest? {
         guard let url = URL(string: baseUrlString) else {
             return nil
@@ -49,7 +53,7 @@ public extension RequestModel {
     }
 }
 
-internal struct BaseRequest: RequestModel {
+internal struct BaseRequest: Request {
     var httpMethod: HTTPMethod
     var baseUrlString: String
     var parameters: [HTTPParameter]?
