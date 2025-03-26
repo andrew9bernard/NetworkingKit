@@ -8,7 +8,7 @@ import Foundation
 
 public enum InternalError: Error {
     case noURL
-    case couldNotParse
+    case couldNotParse(Error)
     case invalidError
     case noData
     case noResponse
@@ -24,7 +24,6 @@ extension InternalError: Equatable {
         switch (lhs, rhs) {
         case (.unknown, .unknown),
             (.noURL, .noURL),
-            (.couldNotParse, .couldNotParse),
             (.invalidError, .invalidError),
             (.noData, .noData),
             (.noResponse, .noResponse),
@@ -32,7 +31,9 @@ extension InternalError: Equatable {
             (.noHTTPURLResponse, .noHTTPURLResponse),
             (.invalidImageData, .invalidImageData):
             return true
-            
+         
+        case let (.couldNotParse(lhsError), .couldNotParse(rhsError)):
+            return (lhsError as NSError) == (rhsError as NSError)
         case let (.requestFailed(lhsError), .requestFailed(rhsError)):
             return (lhsError as NSError) == (rhsError as NSError)
         
