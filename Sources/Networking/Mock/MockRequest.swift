@@ -8,7 +8,7 @@ import Foundation
 
 // MARK: - Mock Endpoint
 
-protocol MockRequest: RequestModel {
+protocol MockRequest: Request {
     var mockFilename: String? { get }
     var mockExtension: String? { get }
 }
