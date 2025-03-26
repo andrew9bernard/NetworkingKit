@@ -8,10 +8,6 @@
 
 import Foundation
 
-public protocol RequestModel {
-    func  getRequest(auth: String) -> Request
-}
-
 public protocol Request {
     var httpMethod: HTTPMethod { get }
     var baseUrlString: String { get }
