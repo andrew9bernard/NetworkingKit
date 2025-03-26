@@ -1,5 +1,5 @@
 //
-//  MockEndpoint.swift
+//  MockRequest.swift
 //  Networking
 //
 //  Created by Andrew Bernard on 3/23/25.
@@ -8,12 +8,12 @@ import Foundation
 
 // MARK: - Mock Endpoint
 
-protocol MockEndpoint: Endpoint {
+protocol MockRequest: RequestModel {
     var mockFilename: String? { get }
     var mockExtension: String? { get }
 }
 
-extension MockEndpoint {
+extension MockRequest {
     func mockData() -> Data? {
         guard let mockFileUrl = Bundle.main.url(forResource: mockFilename, withExtension: mockExtension),
               let mockData = try? Data(contentsOf: mockFileUrl) else {

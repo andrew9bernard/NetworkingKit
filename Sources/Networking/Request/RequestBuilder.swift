@@ -1,5 +1,5 @@
 //
-//  URLRequestBuilder.swift
+//  RequestBuilder.swift
 //  Networking
 //
 //  Created by Andrew Bernard on 3/23/25.
@@ -11,9 +11,9 @@ public struct QueryPayload: Codable {
     var variables: [String: AnyCodable]?
 }
 
-public typealias EndpointRequest = URLRequestBuilder
+//public typealias RequestModel = URLRequestBuilder
 
-public struct URLRequestBuilder: Sendable {
+public struct RequestBuilder: Sendable {
     public private(set) var buildURLRequest: @Sendable (inout URLRequest) -> Void
     public private(set) var urlComponents: URLComponents
 
@@ -30,25 +30,25 @@ public struct URLRequestBuilder: Sendable {
         self.init(urlComponents: components)
     }
 
-    public static func customURL(_ url: URL) -> URLRequestBuilder {
+    public static func customURL(_ url: URL) -> RequestBuilder {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             print("can't make URLComponents from URL")
-            return URLRequestBuilder(urlComponents: .init())
+            return RequestBuilder(urlComponents: .init())
         }
-        return URLRequestBuilder(
+        return RequestBuilder(
             urlComponents: components
         )
     }
 
     // MARK: - Building Blocks
-    public func modifyURL(_ modifyURL: @escaping (inout URLComponents) -> Void) -> URLRequestBuilder {
+    public func modifyURL(_ modifyURL: @escaping (inout URLComponents) -> Void) -> RequestBuilder {
         var copy = self
         var newComponents = copy.urlComponents // Ensure we work on a new copy
         modifyURL(&newComponents)
         copy.urlComponents = newComponents
         return copy
     }
-    public func modifyRequest(_ modifyRequest: @escaping @Sendable (inout URLRequest) -> Void) -> URLRequestBuilder {
+    public func modifyRequest(_ modifyRequest: @escaping @Sendable (inout URLRequest) -> Void) -> RequestBuilder {
         var copy = self
         let existing = buildURLRequest
         copy.buildURLRequest = { request in
@@ -58,11 +58,11 @@ public struct URLRequestBuilder: Sendable {
         return copy
     }
 
-    public func method(_ method: Method) -> URLRequestBuilder {
+    public func method(_ method: Method) -> RequestBuilder {
         modifyRequest { $0.httpMethod = method.rawValue }
     }
 
-    public func body(_ body: Data, setContentLength: Bool = false) -> URLRequestBuilder {
+    public func body(_ body: Data, setContentLength: Bool = false) -> RequestBuilder {
         let updated = modifyRequest { $0.httpBody = body }
         if setContentLength {
             return updated.contentLength(body.count)
@@ -73,7 +73,7 @@ public struct URLRequestBuilder: Sendable {
     
     // MARK: GraphQL Modifier
     /// Adds a GraphQL request body using `QueryPayload`
-    public func graphQLRequestBody(_ queryPayload: QueryPayload, encoder: JSONEncoder = URLRequestBuilder.jsonEncoder) throws -> URLRequestBuilder {
+    public func graphQLRequestBody(_ queryPayload: QueryPayload, encoder: JSONEncoder = RequestBuilder.jsonEncoder) throws -> RequestBuilder {
         let jsonBody = try encoder.encode(queryPayload)
         return self
             .method(.post) // GraphQL typically uses POST
@@ -82,7 +82,7 @@ public struct URLRequestBuilder: Sendable {
     }
 
     /// Convenience method to create a GraphQL request from a query string and variables
-    public func graphQLQuery(_ query: String, variables: [String: Any]? = nil, encoder: JSONEncoder = URLRequestBuilder.jsonEncoder) throws -> URLRequestBuilder {
+    public func graphQLQuery(_ query: String, variables: [String: Any]? = nil, encoder: JSONEncoder = RequestBuilder.jsonEncoder) throws -> RequestBuilder {
         let encodedVariables = variables?.mapValues { AnyCodable($0) }
         let payload = QueryPayload(query: query, variables: encodedVariables)
         return try graphQLRequestBody(payload, encoder: encoder)
@@ -90,14 +90,14 @@ public struct URLRequestBuilder: Sendable {
 
     public static let jsonEncoder = JSONEncoder()
 
-    public func jsonBody<Content: Encodable>(_ body: Content, encoder: JSONEncoder = URLRequestBuilder.jsonEncoder, setContentLength: Bool = false) throws -> URLRequestBuilder {
+    public func jsonBody<Content: Encodable>(_ body: Content, encoder: JSONEncoder = RequestBuilder.jsonEncoder, setContentLength: Bool = false) throws -> RequestBuilder {
         let body = try encoder.encode(body)
         return self.body(body)
     }
 
     // MARK: Query
 
-    public func queryItems(_ queryItems: [URLQueryItem]) -> URLRequestBuilder {
+    public func queryItems(_ queryItems: [URLQueryItem]) -> RequestBuilder {
         modifyURL { urlComponents in
             var items = urlComponents.queryItems ?? []
             items.append(contentsOf: queryItems)
@@ -105,33 +105,33 @@ public struct URLRequestBuilder: Sendable {
         }
     }
 
-    public func queryItems(_ queryItems: KeyValuePairs<String, String>) -> URLRequestBuilder {
+    public func queryItems(_ queryItems: KeyValuePairs<String, String>) -> RequestBuilder {
         self.queryItems(queryItems.map { .init(name: $0.key, value: $0.value) })
     }
 
-    public func queryItem(name: String, value: String) -> URLRequestBuilder {
+    public func queryItem(name: String, value: String) -> RequestBuilder {
         queryItems([name: value])
     }
 
-    public func contentType(_ contentType: ContentType) -> URLRequestBuilder {
+    public func contentType(_ contentType: ContentType) -> RequestBuilder {
         header(name: ContentType.header, value: contentType.rawValue)
     }
     
-    public func accept(_ contentType: ContentType) -> URLRequestBuilder {
+    public func accept(_ contentType: ContentType) -> RequestBuilder {
         header(name: .accept, value: contentType.rawValue)
     }
 
     // MARK: Other
 
-    public func contentLength(_ length: Int) -> URLRequestBuilder {
+    public func contentLength(_ length: Int) -> RequestBuilder {
         header(name: .contentLength, value: String(length))
     }
 
-    public func header(name: HeaderName, value: String) -> URLRequestBuilder {
+    public func header(name: HeaderName, value: String) -> RequestBuilder {
         modifyRequest { $0.addValue(value, forHTTPHeaderField: name.rawValue) }
     }
 
-    public func header(name: HeaderName, values: [String]) -> URLRequestBuilder {
+    public func header(name: HeaderName, values: [String]) -> RequestBuilder {
         var copy = self
         for value in values {
             copy = copy.header(name: name, value: value)
@@ -139,14 +139,14 @@ public struct URLRequestBuilder: Sendable {
         return copy
     }
 
-    public func timeout(_ timeout: TimeInterval) -> URLRequestBuilder {
+    public func timeout(_ timeout: TimeInterval) -> RequestBuilder {
         modifyRequest { $0.timeoutInterval = timeout }
     }
 }
 
 // MARK: - Finalizing
 
-extension URLRequestBuilder {
+extension RequestBuilder {
     public func makeRequest(withConfig config: RequestConfiguration) -> URLRequest {
         config.configureRequest(self)
     }
@@ -157,24 +157,24 @@ extension URLRequestBuilder {
 }
 
 extension URLRequest {
-    public init(baseURL: URL, endpointRequest: URLRequestBuilder) {
-        self = endpointRequest.makeRequest(withBaseURL: baseURL)
+    public init(baseURL: URL, requestBuilder: RequestBuilder) {
+        self = requestBuilder.makeRequest(withBaseURL: baseURL)
     }
 }
 
-extension URLRequestBuilder {
+extension RequestBuilder {
     public struct RequestConfiguration: Sendable {
-        public init(configureRequest: @escaping @Sendable (URLRequestBuilder) -> URLRequest) {
+        public init(configureRequest: @escaping @Sendable (RequestBuilder) -> URLRequest) {
             self.configureRequest = configureRequest
         }
         
-        public let configureRequest: @Sendable (URLRequestBuilder) -> URLRequest
+        public let configureRequest: @Sendable (RequestBuilder) -> URLRequest
     }
 }
 
-extension URLRequestBuilder.RequestConfiguration {
-    public static func baseURL(_ baseURL: URL) -> URLRequestBuilder.RequestConfiguration {
-        return URLRequestBuilder.RequestConfiguration { request in
+extension RequestBuilder.RequestConfiguration {
+    public static func baseURL(_ baseURL: URL) -> RequestBuilder.RequestConfiguration {
+        return RequestBuilder.RequestConfiguration { request in
             let finalURL = request.urlComponents.url(relativeTo: baseURL) ?? baseURL
 
             var urlRequest = URLRequest(url: finalURL)
@@ -184,8 +184,8 @@ extension URLRequestBuilder.RequestConfiguration {
         }
     }
     
-    public static func base(scheme: String?, host: String?, port: Int?) -> URLRequestBuilder.RequestConfiguration {
-        URLRequestBuilder.RequestConfiguration { request in
+    public static func base(scheme: String?, host: String?, port: Int?) -> RequestBuilder.RequestConfiguration {
+        RequestBuilder.RequestConfiguration { request in
             var request = request
             request.urlComponents.scheme = scheme
             request.urlComponents.host = host

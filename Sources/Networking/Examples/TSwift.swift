@@ -6,12 +6,19 @@
 //
 import Foundation
 
-struct TSwift: Endpoint {
+struct TSwift: RequestModel {
     func request() -> URLRequest? {
         guard let baseURL = URL(string: "https://taylor-swift-api.sarbo.workers.dev") else { return nil }
-        let urlRequest =  EndpointRequest(path: "albums")
+        let urlRequest =  RequestBuilder(path: "albums")
             .method(.get)
+           // .jsonBody(user)
+            .contentType(.applicationJSON)
+            .accept(.applicationJSON)
+            .timeout(60)
+            .queryItem(name: "song", value: "bad blood")
+          //  .header(name: "Auth-Token", value: authToken)
             .makeRequest(withBaseURL: baseURL)
+    
         return urlRequest
     }
     
@@ -45,7 +52,7 @@ struct TSwift: Endpoint {
             variables: [:]
         )
         do {
-            let urlRequest =  try EndpointRequest(path: "index")
+            let urlRequest =  try RequestBuilder(path: "index")
                 .graphQLRequestBody(queryPayload)
                 .makeRequest(withBaseURL: baseURL)
             return urlRequest
@@ -136,7 +143,7 @@ class ExampleViewModel: ObservableObject {
         defer { Task { @MainActor in self.isLoading = false } }
 
         do {
-            let result: ExampleResponse = try await networking.perform(endpoint: ExampleEndpoint(), decodeTo: ExampleResponse.self)
+            let result: ExampleResponse = try await networking.perform(request: ExampleEndpoint(), decodeTo: ExampleResponse.self)
             Task { @MainActor in self.data = result.title }
         } catch {
             Task { @MainActor in self.errorMessage = error.localizedDescription }
@@ -145,7 +152,7 @@ class ExampleViewModel: ObservableObject {
 }
 
 // MARK: - Example Endpoint
-struct ExampleEndpoint: Endpoint {
+struct ExampleEndpoint: RequestModel {
     func request() -> URLRequest? {
         guard let url = URL(string: "https://jsonplaceholder.typicode.com/todos/1") else { return nil }
         return URLRequest(url: url)

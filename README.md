@@ -1,8 +1,8 @@
-This networking package uses the Builder concept to build out requests.  The requests are called Endpoints.
+This networking package uses the Builder concept to build out requests.  The requests are called RequestModel.
 
-An Endpoint lets you build out any type of custom header that you would need. Lets you as a query, body.
+An RequestModel lets you build out any type of custom header that you would need. Lets you as a query, body.
 
-It also alows for building the endpoint to be able to make a GraphQL query.
+It also alows for building the request to be able to make a GraphQL query.
 
 There is an async call that you can use to perform your requests.
 
@@ -36,7 +36,7 @@ class ExampleViewModel: ObservableObject {
         defer { Task { @MainActor in self.isLoading = false } }
 
         do {
-            let result: ExampleResponse = try await networking.perform(endpoint: ExampleEndpoint(), decodeTo: ExampleResponse.self)
+            let result: ExampleResponse = try await networking.perform(request: ExampleRequestModel(), decodeTo: ExampleResponse.self)
             Task { @MainActor in self.data = result.title }
         } catch {
             Task { @MainActor in self.errorMessage = error.localizedDescription }
@@ -44,8 +44,8 @@ class ExampleViewModel: ObservableObject {
     }
 }
 
-// MARK: - Example Endpoint
-struct ExampleEndpoint: Endpoint {
+// MARK: - Example RequestModel
+struct ExampleRequestModel: RequestModel {
     func request() -> URLRequest? {
         guard let url = URL(string: "https://jsonplaceholder.typicode.com/todos/1") else { return nil }
         return URLRequest(url: url)

@@ -3,8 +3,8 @@ import Foundation
 
 // MARK: - NetworkingProtocol
 public protocol AsyncRequestProtocol: Sendable {
-    func perform<T: Codable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T
-    func perform(endpoint: Endpoint) async throws
+    func perform<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T
+    func perform(request: RequestModel) async throws
 }
 
 public struct AsyncRequest: AsyncRequestProtocol {
@@ -22,19 +22,19 @@ public struct AsyncRequest: AsyncRequestProtocol {
     
     
     // MARK: perform request with Async Await and return Decodable using Request Protocol
-    public func perform<T: Codable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
-        return try await performRequest(endpoint: endpoint, decodeTo: decodableObject)
+    public func perform<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
+        return try await performRequest(request: request, decodeTo: decodableObject)
     }
     
 //    // MARK: perform request with Async Await using Request protocol
-    public func perform(endpoint: Endpoint) async throws {
-        try await performRequest(endpoint: endpoint, decodeTo: EmptyResponse.self)
+    public func perform(request: RequestModel) async throws {
+        try await performRequest(request: request, decodeTo: EmptyResponse.self)
     }
     
     @discardableResult
-    private func performRequest<T: Codable>(endpoint: Endpoint, decodeTo decodableObject: T.Type) async throws -> T {
+    private func performRequest<T: Codable>(request: RequestModel, decodeTo decodableObject: T.Type) async throws -> T {
         do {
-            guard let request = endpoint.request() else {
+            guard let request = request.request() else {
                 throw NetworkError.internalError(.noRequest)
             }
             
@@ -56,7 +56,7 @@ public struct AsyncRequest: AsyncRequestProtocol {
     
 }
 
-// MARK: - Endpoint
-public protocol Endpoint {
+// MARK: - RequestModel
+public protocol RequestModel {
     func request() -> URLRequest?
 }
