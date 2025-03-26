@@ -26,6 +26,12 @@ struct Album: Codable {
     let albumId: Int
     let title: String
     let releaseDate: String
+    
+    enum CodingKeys: String, CodingKey {
+        case albumId = "album_id"
+        case title
+        case releaseDate = "release_date"
+    }
 }
 
 struct TSwiftGrapgQL {
