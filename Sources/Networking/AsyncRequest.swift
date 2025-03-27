@@ -1,5 +1,14 @@
 import Foundation
 
+// MARK: Overrides to see if URLSession can be protocolled for mock
+public protocol URLSessionProtocol: Sendable {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+    func invalidateAndCancel()
+}
+
+extension URLSession: URLSessionProtocol { }
+
+
 
 // MARK: - NetworkingProtocol
 public protocol AsyncRequestProtocol: Sendable {
@@ -9,11 +18,11 @@ public protocol AsyncRequestProtocol: Sendable {
 
 public struct AsyncRequest: AsyncRequestProtocol {
     
-    private let urlSession: URLSession
+    private let urlSession: URLSessionProtocol
     private let validator: ResponseValidatorProtocol
     private let requestDecoder: RequestDecodableProtocol
     
-    public init(urlSession: URLSession = .shared, validator: ResponseValidatorProtocol = ResponseValidator(), requestDecoder: RequestDecodableProtocol = RequestDecoder()) {
+    public init(urlSession: URLSessionProtocol = URLSession.shared, validator: ResponseValidatorProtocol = ResponseValidator(), requestDecoder: RequestDecodableProtocol = RequestDecoder()) {
         
         self.urlSession = urlSession
         self.validator = validator

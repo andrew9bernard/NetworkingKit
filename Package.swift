@@ -18,7 +18,7 @@ let package = Package(
         .target(
             name: "Networking"),
         .testTarget(
-            name: "NetworkingTests",
+            name: "Tests",
             dependencies: ["Networking"]
         ),
     ]
